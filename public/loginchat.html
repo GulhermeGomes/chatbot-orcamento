@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login/Orçamento</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div id="login-container">
+      <h2>Login ou Registro</h2>
+      <input type="email" id="email" placeholder="E-mail" />
+      <input type="password" id="password" placeholder="Senha" />
+      <button onclick="login()">Entrar</button>
+      <button onclick="register()">Registrar</button>
+      <p id="login-message"></p>
+    </div>
+    <div id="chat-container" style="display: none;">
+      <div id="chat-box" class="chat-box"></div>
+      <input type="text" id="user-input" placeholder="Digite aqui..." />
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
