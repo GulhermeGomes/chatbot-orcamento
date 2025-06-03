@@ -1,12 +1,14 @@
 let userId = null;
 const questions = [
-  "Olá! Vamos fazer um orçamento para seu site. Qual o tipo de site? (institucional, loja, etc.)",
+  
+  "🤖 Olá! Vamos fazer um orçamento para seu site. Qual o tipo de site? (institucional, loja, etc.)",
   "Quantas páginas terá?",
   "Deseja design personalizado? (sim/não)",
   "Precisa de integração com redes sociais ou pagamento? (sim/não)"
 ];
 let step = 0;
 let answers = [];
+
 function addMessage(sender, text) {
   const chatBox = document.getElementById("chat-box");
   const msg = document.createElement("div");
@@ -14,6 +16,7 @@ function addMessage(sender, text) {
   chatBox.appendChild(msg);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
+
 function sendMessage() {
   const inputEl = document.getElementById("user-input");
   const text = inputEl.value.trim();
@@ -29,58 +32,54 @@ function sendMessage() {
     return;
   }
 
-  // Pegamos respostas finais
   const [tipo, paginasRaw, designRaw, integracoesRaw] = answers;
-
-  // 1) Forçar páginas como inteiro
   const paginas = parseInt(paginasRaw, 10) || 0;
+  const design = designRaw.trim().toLowerCase().startsWith("s");
+  const integracoes = integracoesRaw.trim().toLowerCase().startsWith("s");
+  const precoBase = 900 + (paginas * 300) + (design ? 600 : 0) + (integracoes ? 1000 : 0);
 
-  // 2) Tratar “sim/não” independentemente de maiúsculas
-  const design       = designRaw.trim().toLowerCase().startsWith("s");
-  const integracoes  = integracoesRaw.trim().toLowerCase().startsWith("s");
-
-  // 3) Calcular preço
-  const precoBase = 900
-    + (paginas * 300)
-    + (design      ? 600 : 0)
-    + (integracoes ? 1000 : 0);
-
-  // 4) Enviar para o backend
   fetch("http://localhost:3000/api/budget", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      user_id:    userId,
+      user_id: userId,
       tipo,
       paginas,
-      design:       design ? "sim" : "não",
-      integracoes:  integracoes ? "sim" : "não",
-      price:     precoBase
+      design: design ? "sim" : "não",
+      integracoes: integracoes ? "sim" : "não",
+      price: precoBase
     })
   })
-  .then(response => {
-    if (!response.ok) throw new Error("Erro na resposta do servidor");
-    return response.json();
+  .then(res => {
+    if (!res.ok) throw new Error("Erro na resposta do servidor");
+    return res.json();
   })
   .then(data => {
-    console.log("Resposta do servidor:", data);
-    addMessage("Bot", `Orçamento salvo! ID ${data.id}. Total: R$ ${precoBase},00.`);
-    addMessage("Bot", "Você receberá um e-mail em instantes com o detalhamento do orçamento e os métodos de pagamento disponíveis. 📧");
-    // 5) Resetar conversa para novo orçamento
-    step = 0;
-    answers = [];
-    setTimeout(() => addMessage("Bot", questions[step]), 1000);
+    addMessage("Bot", `✅ Orçamento salvo! ID ${data.id}.`);
+    addMessage("Bot", `💰 Total: R$ ${precoBase},00.`);
+    addMessage("Bot", `📧 Você receberá um e-mail com o orçamento e métodos de pagamento.`);
+    document.querySelector(".chat-input-area").style.display = "none";
+    document.getElementById("new-budget-btn").style.display = "block";
   })
   .catch(err => {
     console.error(err);
-    addMessage("Bot", "Desculpe, houve um erro ao salvar seu orçamento.");
+    addMessage("Bot", "❌ Desculpe, houve um erro ao salvar seu orçamento.");
   });
 }
 
+function startNewBudget() {
+  step = 0;
+  answers = [];
+  document.getElementById("chat-box").innerHTML = "";
+  addMessage("Bot", questions[step]);
+  document.querySelector(".chat-input-area").style.display = "flex";
+  document.getElementById("new-budget-btn").style.display = "none";
+}
 
 function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
+
   fetch("http://localhost:3000/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -98,9 +97,11 @@ function login() {
     document.getElementById("login-message").innerText = "Erro: " + err.message;
   });
 }
+
 function register() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
+
   fetch("http://localhost:3000/api/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -118,10 +119,28 @@ function register() {
     document.getElementById("login-message").innerText = "Erro: " + err.message;
   });
 }
+
 function showChat() {
   document.getElementById("login-container").style.display = "none";
   document.getElementById("chat-container").style.display = "block";
-  step = 0;
-  answers = [];
-  addMessage("Bot", questions[0]);
+  startNewBudget();
 }
+const themeToggle = document.getElementById('theme-toggle');
+
+themeToggle.addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+
+  const isDark = document.body.classList.contains('dark-mode');
+  localStorage.setItem('dark-mode', isDark ? 'true' : 'false');
+
+  themeToggle.textContent = isDark ? '☀️' : '🌙';
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  const isDark = localStorage.getItem('dark-mode');
+  if (isDark === 'true' || (!isDark && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark-mode');
+    themeToggle.textContent = '☀️';
+  }
+});
+
