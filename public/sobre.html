@@ -8,6 +8,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+  <a href="index.html">
+    <img src="public/images/logo.png" alt="Logo Voxy" class="logo-top-left" />
+  </a>
+
   <div class="container">
     <h2>Sobre Nós</h2>
     <p>Fundada em 2023, a Voxy é uma agência de design gráfico e web comprometida em transformar ideias em soluções visuais criativas, modernas e eficazes.</p>
@@ -25,6 +29,23 @@
   </div>
 
   <button id="theme-toggle">🌙</button>
-  <script src="script.js"></script>
+  <script>
+    // Modo escuro/claro
+    const themeToggle = document.getElementById('theme-toggle');
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('dark-mode', isDark ? 'true' : 'false');
+      themeToggle.textContent = isDark ? '☀️' : '🌙';
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const isDark = localStorage.getItem('dark-mode');
+      if (isDark === 'true' || (!isDark && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-mode');
+        themeToggle.textContent = '☀️';
+      }
+    });
+  </script>
 </body>
 </html>

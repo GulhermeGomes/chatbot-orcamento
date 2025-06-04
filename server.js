@@ -1,28 +1,29 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const db = require('./database'); // seu módulo DB deve estar funcionando
+const db = require('./database');
 const nodemailer = require('nodemailer');
 const path = require('path');
+const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Configuração do transporter do Nodemailer
+// Configura transporte de e-mail (Nodemailer)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'mateuslourencodev@gmail.com',   // seu email aqui
-    pass: 'kcyuywedvwcrmauc'                // senha de app gerada no Google, sem espaços
+    user: 'mateuslourencodev@gmail.com',     // Seu email
+    pass: 'kcyuywedvwcrmauc'                 // Senha de app
   }
 });
 
-// Função que envia o e-mail retornando uma Promise
+// Função para envio de e-mail
 function enviarEmail(to, subject, text) {
   const mailOptions = {
-    from: 'mateuslourencodev@gmail.com',  // deve ser igual ao user do transporter
+    from: 'mateuslourencodev@gmail.com',
     to,
     subject,
     text
@@ -41,49 +42,60 @@ function enviarEmail(to, subject, text) {
   });
 }
 
-// Endpoint para registrar usuário
-app.post('/api/register', (req, res) => {
+// ✅ REGISTRO com senha criptografada
+app.post('/api/register', async (req, res) => {
   const { email, password } = req.body;
-  db.query(
-    'INSERT INTO users (email, password) VALUES (?, ?)',
-    [email, password],
-    (err, result) => {
-      if (err) return res.status(400).json({ error: "Usuário já existe." });
-      res.json({ id: result.insertId });
-    }
-  );
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    db.query(
+      'INSERT INTO users (email, password) VALUES (?, ?)',
+      [email, hashedPassword],
+      (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(400).json({ error: "Usuário já existe ou erro no banco de dados." });
+        }
+        res.json({ id: result.insertId });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ error: "Erro interno ao registrar." });
+  }
 });
 
-// Endpoint para login
+// ✅ LOGIN com verificação segura
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
+
   db.query(
-    'SELECT id FROM users WHERE email = ? AND password = ?',
-    [email, password],
-    (err, results) => {
+    'SELECT id, password FROM users WHERE email = ?',
+    [email],
+    async (err, results) => {
       if (err) return res.status(500).json(err);
       if (results.length === 0) return res.status(401).json({ error: "Credenciais inválidas." });
-      res.json({ id: results[0].id });
+
+      const user = results[0];
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if (!isMatch) return res.status(401).json({ error: "Credenciais inválidas." });
+
+      res.json({ id: user.id });
     }
   );
 });
 
-// Endpoint para criar orçamento e enviar e-mail
+// ✅ Criar orçamento + enviar e-mail
 app.post('/api/budget', (req, res) => {
   const { user_id, tipo, paginas, design, integracoes, price } = req.body;
-  console.log("Payload recebido:", req.body);
 
   db.query('SELECT email FROM users WHERE id = ?', [user_id], (err, results) => {
-    if (err) {
-      console.error('Erro ao buscar email:', err);
-      return res.status(500).json({ error: 'Erro ao buscar usuário.' });
-    }
-    if (results.length === 0) {
+    if (err || results.length === 0) {
       return res.status(404).json({ error: 'Usuário não encontrado.' });
     }
 
     const userEmail = results[0].email;
-    console.log('Email encontrado:', userEmail);
 
     db.query(
       `INSERT INTO budgets (user_id, tipo, paginas, design, integracoes, price)
@@ -96,33 +108,36 @@ app.post('/api/budget', (req, res) => {
         }
 
         try {
-          console.log(`📤 Enviando e-mail para: ${userEmail}...`);
-
           await enviarEmail(
             userEmail,
             'Seu orçamento foi criado!',
             `Olá! Seu orçamento para o tipo: ${tipo} foi criado.\nTotal: R$${price},00.\nObrigado por usar nosso serviço!`
           );
 
-          console.log(`✅ E-mail enviado com sucesso para: ${userEmail}`);
-
           res.json({ id: result.insertId, message: 'Orçamento salvo e e-mail enviado!' });
         } catch (emailErr) {
-          console.error('❌ Erro ao enviar e-mail:', emailErr);
-          res.status(500).json({ error: 'Orçamento salvo, mas houve erro ao enviar o e-mail.' });
+          console.error('Erro ao enviar e-mail:', emailErr);
+          res.status(500).json({ error: 'Orçamento salvo, mas erro ao enviar o e-mail.' });
         }
       }
     );
   });
 });
 
-// Rota principal
+// Página inicial
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'loginchat.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Página Sobre Nós (se estiver fora da public, adicione esta rota)
+app.get('/sobre.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'sobre.html'));
+});
+
+// Teste de envio de e-mail
 app.get('/test-email', async (req, res) => {
   try {
-    const testEmail = 'seuemaildestino@exemplo.com';  // coloque o e-mail para teste aqui
+    const testEmail = 'seuemaildestino@exemplo.com';  // Altere aqui
 
     await enviarEmail(
       testEmail,

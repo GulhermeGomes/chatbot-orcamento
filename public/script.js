@@ -1,6 +1,5 @@
-let userId = null;
+const userId = window.userId;
 const questions = [
-  
   "🤖 Olá! Vamos fazer um orçamento para seu site. Qual o tipo de site? (institucional, loja, etc.)",
   "Quantas páginas terá?",
   "Deseja design personalizado? (sim/não)",
@@ -76,63 +75,11 @@ function startNewBudget() {
   document.getElementById("new-budget-btn").style.display = "none";
 }
 
-function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  fetch("http://localhost:3000/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  })
-  .then(res => {
-    if (!res.ok) throw new Error("Login inválido");
-    return res.json();
-  })
-  .then(data => {
-    userId = data.id;
-    showChat();
-  })
-  .catch(err => {
-    document.getElementById("login-message").innerText = "Erro: " + err.message;
-  });
-}
-
-function register() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  fetch("http://localhost:3000/api/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  })
-  .then(res => {
-    if (!res.ok) throw new Error("Erro ao registrar");
-    return res.json();
-  })
-  .then(data => {
-    userId = data.id;
-    showChat();
-  })
-  .catch(err => {
-    document.getElementById("login-message").innerText = "Erro: " + err.message;
-  });
-}
-
-function showChat() {
-  document.getElementById("login-container").style.display = "none";
-  document.getElementById("chat-container").style.display = "block";
-  startNewBudget();
-}
 const themeToggle = document.getElementById('theme-toggle');
-
 themeToggle.addEventListener('click', () => {
   document.body.classList.toggle('dark-mode');
-
   const isDark = document.body.classList.contains('dark-mode');
   localStorage.setItem('dark-mode', isDark ? 'true' : 'false');
-
   themeToggle.textContent = isDark ? '☀️' : '🌙';
 });
 
@@ -142,5 +89,5 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('dark-mode');
     themeToggle.textContent = '☀️';
   }
+  startNewBudget();
 });
-
