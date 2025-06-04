@@ -29,7 +29,6 @@
   <button id="theme-toggle">🌙</button>
 
   <script>
-    // Tema escuro
     const toggleBtn = document.getElementById('theme-toggle');
     toggleBtn.addEventListener('click', () => {
       document.body.classList.toggle('dark-mode');
@@ -41,7 +40,6 @@
       toggleBtn.textContent = '☀️';
     }
 
-    // Login
     function login() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -63,7 +61,6 @@
       });
     }
 
-    // Registro
     function register() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();

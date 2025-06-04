@@ -11,7 +11,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Configura transporte de e-mail (Nodemailer)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -20,7 +19,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Função para envio de e-mail
 function enviarEmail(to, subject, text) {
   const mailOptions = {
     from: 'mateuslourencodev@gmail.com',
@@ -42,7 +40,6 @@ function enviarEmail(to, subject, text) {
   });
 }
 
-// ✅ REGISTRO com senha criptografada
 app.post('/api/register', async (req, res) => {
   const { email, password } = req.body;
 
@@ -65,7 +62,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// ✅ LOGIN com verificação segura
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -86,7 +82,6 @@ app.post('/api/login', (req, res) => {
   );
 });
 
-// ✅ Criar orçamento + enviar e-mail
 app.post('/api/budget', (req, res) => {
   const { user_id, tipo, paginas, design, integracoes, price } = req.body;
 
@@ -124,17 +119,14 @@ app.post('/api/budget', (req, res) => {
   });
 });
 
-// Página inicial
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Página Sobre Nós (se estiver fora da public, adicione esta rota)
 app.get('/sobre.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'sobre.html'));
 });
 
-// Teste de envio de e-mail
 app.get('/test-email', async (req, res) => {
   try {
     const testEmail = 'seuemaildestino@exemplo.com';  // Altere aqui
