@@ -31,37 +31,51 @@ function sendMessage() {
     return;
   }
 
+  // Coleta final e cálculo do orçamento
   const [tipo, paginasRaw, designRaw, integracoesRaw] = answers;
   const paginas = parseInt(paginasRaw, 10) || 0;
   const design = designRaw.trim().toLowerCase().startsWith("s");
   const integracoes = integracoesRaw.trim().toLowerCase().startsWith("s");
   const precoBase = 900 + (paginas * 300) + (design ? 600 : 0) + (integracoes ? 1000 : 0);
 
-  fetch("http://localhost:3000/api/budget", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: userId,
-      tipo,
-      paginas,
-      design: design ? "sim" : "não",
-      integracoes: integracoes ? "sim" : "não",
-      price: precoBase
-    })
+  // Envia para backend que trata todas as 10 tabelas invisivelmente
+fetch("http://localhost:3000/api/budget", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    user_id: userId,
+    tipo,
+    paginas,
+    design: design ? "sim" : "não",
+    integracoes: integracoes ? "sim" : "não",
+    price: precoBase
   })
+})
   .then(res => {
-    if (!res.ok) throw new Error("Erro na resposta do servidor");
+    if (!res.ok) {
+      throw new Error(`Erro na resposta do servidor (status ${res.status})`);
+    }
     return res.json();
   })
-  .then(data => {
-    addMessage("Bot", `✅ Orçamento salvo! ID ${data.id}.`);
-    addMessage("Bot", `💰 Total: R$ ${precoBase},00.`);
-    addMessage("Bot", `📧 Você receberá um e-mail com o orçamento e métodos de pagamento.`);
-    document.querySelector(".chat-input-area").style.display = "none";
-    document.getElementById("new-budget-btn").style.display = "block";
-  })
+ .then(data => {
+  if (!data.id) {
+    throw new Error("Resposta JSON não contém ID do orçamento.");
+  }
+
+  addMessage("Bot", `✅ Orçamento salvo! ID ${data.id}.`);
+  addMessage("Bot", `💰 Total: R$ ${precoBase},00.`);
+  addMessage("Bot", `📧 Você receberá um e-mail com o orçamento e métodos de pagamento.`);
+
+  if (data.warning) {
+    addMessage("Bot", `⚠️ Aviso: ${data.warning}`);
+  }
+
+  document.querySelector(".chat-input-area").style.display = "none";
+  document.getElementById("new-budget-btn").style.display = "block";
+})
+
   .catch(err => {
-    console.error(err);
+    console.error("Erro ao processar orçamento:", err);
     addMessage("Bot", "❌ Desculpe, houve um erro ao salvar seu orçamento.");
   });
 }
@@ -75,6 +89,7 @@ function startNewBudget() {
   document.getElementById("new-budget-btn").style.display = "none";
 }
 
+// Tema claro/escuro
 const themeToggle = document.getElementById('theme-toggle');
 themeToggle.addEventListener('click', () => {
   document.body.classList.toggle('dark-mode');
