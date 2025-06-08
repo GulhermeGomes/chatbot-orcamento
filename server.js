@@ -10,32 +10,12 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'mateuslourencodev@gmail.com',     // Seu email
-    pass: 'kcyuywedvwcrmauc'                 // Senha de app
-  }
-});
-
 function enviarEmail(to, subject, text) {
-  const mailOptions = {
-    from: 'mateuslourencodev@gmail.com',
-    to,
-    subject,
-    text
-  };
-
-  return new Promise((resolve, reject) => {
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.error('Erro ao enviar email:', err);
-        reject(err);
-      } else {
-        console.log('Email enviado:', info.response);
-        resolve(info);
-      }
-    });
+  return new Promise((resolve) => {
+    console.log(`Simulando envio de e-mail para ${to}`);
+    console.log(`Assunto: ${subject}`);
+    console.log(`Texto: ${text}`);
+    resolve({ response: 'Simulação de e-mail concluída.' });
   });
 }
 
@@ -112,10 +92,10 @@ app.post('/api/budget', (req, res) => {
     `Olá! Seu orçamento para o tipo: ${tipo} foi criado.\nTotal: R$${price},00.\nObrigado por usar nosso serviço!`
   );
 
-          res.json({ id: result.insertId, message: 'Orçamento salvo e e-mail enviado!' });
+          res.json({ id: result.insertId, message: 'Orçamento salvo e e-mail simulado com sucesso!' });
         } catch (emailErr) {
-          console.error('Erro ao enviar e-mail:', emailErr);
-          res.status(500).json({ error: 'Orçamento salvo, mas erro ao enviar o e-mail.' });
+          console.error('Erro ao simular e-mail:', emailErr);
+          res.status(500).json({ error: 'Orçamento salvo, mas erro na simulação de e-mail.' });
         }
       }
     );
@@ -132,7 +112,7 @@ app.get('/sobre.html', (req, res) => {
 
 app.get('/test-email', async (req, res) => {
   try {
-    const testEmail = 'seuemaildestino@exemplo.com';  // Altere aqui
+    const testEmail = 'seuemaildestino@exemplo.com';  // Simulação
 
     await enviarEmail(
       testEmail,
@@ -140,10 +120,10 @@ app.get('/test-email', async (req, res) => {
       'Este é um e-mail de teste simulado pelo servidor.'
     );
 
-    res.send('E-mail de teste enviado com sucesso para ' + testEmail);
+    res.send('Simulação de envio de e-mail para ' + testEmail);
   } catch (error) {
-    console.error('Erro ao enviar e-mail de teste:', error);
-    res.status(500).send('Erro ao enviar e-mail de teste.');
+    console.error('Erro na simulação de e-mail:', error);
+    res.status(500).send('Erro ao simular envio de e-mail.');
   }
 });
 
